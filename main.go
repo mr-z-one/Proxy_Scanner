@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"proxyScanner/config"
 	"proxyScanner/db"
 	"proxyScanner/utils"
 
@@ -38,9 +39,16 @@ var port int
 var scope []string
 var outScope []string
 
+var username string
+var password string
+var databaseName string
+
+var jsonConfig string
+
 func main() {
 	parsFlag()
-
+	fetchConfigFile()
+	showInputData()
 	opts := &proxy.Options{
 		Addr:              ":" + strconv.Itoa(port),
 		StreamLargeBodies: 1024 * 1024 * 10,
@@ -53,11 +61,12 @@ func main() {
 		panic(err)
 	}
 
-	db, err := db.GetDatabaseConnection("navid", "1234", "namava")
+	db, err := db.GetDatabaseConnection(username, password, databaseName)
 	if err != nil {
-		fmt.Println("[-] failed to connect to database", err)
+		fmt.Println("[-] failed to connect to database :", err)
+		return
 	} else {
-		fmt.Println("[+] connect to database")
+		fmt.Println("[+] connect to database with username : ", username, "db : ", databaseName)
 	}
 	fmt.Println(db)
 
@@ -79,6 +88,38 @@ func main() {
 
 	p.Start()
 	//log.Fatal(p.Start())
+}
+
+func fetchConfigFile() {
+
+	if jsonConfig == "" {
+		return
+	}
+	c := config.ReadeConfig(jsonConfig)
+
+	if username == "" {
+		username = c.Username
+	}
+	if password == "" {
+		password = c.Password
+	}
+	if databaseName == "" {
+		databaseName = c.DbName
+	}
+	if port == 0 {
+		port = c.Port
+	}
+
+	if up_stream_proxy == "" {
+		up_stream_proxy = c.Proxy
+	}
+
+	if len(scope) == 0 {
+		scope = c.Scope
+	}
+	if len(outScope) == 0 {
+		outScope = c.OutScope
+	}
 }
 
 func passProxy(inScope []string, outScope []string, host string) bool {
@@ -104,11 +145,25 @@ func passProxy(inScope []string, outScope []string, host string) bool {
 	return false
 }
 
+func showInputData() {
+	fmt.Println("[+] username:", username)
+	fmt.Println("[+] dbName:", databaseName)
+	fmt.Println("[+] In Scope Domain", scope)
+	fmt.Println("[+] out Scope Domain", outScope)
+
+}
+
 func parsFlag() {
-	flag.StringVar(&up_stream_proxy, "proxy", "http://127.0.0.1:8080", "up stream proxy")
-	flag.IntVar(&port, "port", 9080, "port of current proxy")
+	flag.StringVar(&up_stream_proxy, "proxy", "", "up stream proxy")
+	flag.IntVar(&port, "port", 0, "port of current proxy")
 	flag.StringSliceVar(&scope, "scope", []string{}, "In scope domain")
 	flag.StringSliceVar(&outScope, "out-scope", []string{}, "out scope domain")
 
+	flag.StringVar(&username, "username", "", "username of pg database")
+	flag.StringVar(&password, "password", "", "password of pg database")
+	flag.StringVar(&databaseName, "db", "", "db name")
+
+	flag.StringVar(&jsonConfig, "config", "", "json config file")
 	flag.Parse()
+
 }

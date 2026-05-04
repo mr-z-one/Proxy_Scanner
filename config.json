@@ -1,0 +1,13 @@
+{
+    "username":"navid",
+    "password":"1234",
+    "dbName":"namava",
+    "port" : 9080,
+    "proxy":"http://127.0.0.1:8080",
+    "scope":[
+        "namava"
+    ],
+    "outScope":[
+        "sentry.namava"
+    ]
+}
