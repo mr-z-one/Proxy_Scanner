@@ -60,6 +60,7 @@ func main() {
 		fmt.Println("[+] connect to database")
 	}
 	fmt.Println(db)
+
 	p.SetUpstreamProxy(func(req *http.Request) (*url.URL, error) {
 		proxyURL, err := url.Parse(up_stream_proxy)
 		if err != nil {
@@ -68,31 +69,39 @@ func main() {
 
 		host := req.URL.Host
 
-		var r *regexp.Regexp
-		r = utils.ScopeToDomainRegex(outScope)
-
-		if len(outScope) > 0 && r.MatchString(host) {
-			// Returning nil with this error tells mitmproxy to not use upstream proxy
+		if passProxy(scope, outScope, host) {
+			return proxyURL, nil
+		} else {
 			return nil, nil
 		}
 
-		if len(scope) != 0 {
-			r = utils.ScopeToDomainRegex(scope)
-		} else {
-			return proxyURL, nil
-		}
-
-		if r.MatchString(host) {
-			log.Printf("Using upstream proxy %s for %s", up_stream_proxy, host)
-			return proxyURL, nil
-		}
-
-		// Returning nil with this error tells mitmproxy to not use upstream proxy
-		return nil, nil
 	})
 
 	p.Start()
 	//log.Fatal(p.Start())
+}
+
+func passProxy(inScope []string, outScope []string, host string) bool {
+	var r *regexp.Regexp
+	r = utils.ScopeToDomainRegex(outScope)
+
+	if len(outScope) > 0 && r.MatchString(host) {
+		// Returning nil with this error tells mitmproxy to not use upstream proxy
+		return false
+	}
+
+	if len(scope) != 0 {
+		r = utils.ScopeToDomainRegex(scope)
+	} else {
+		return true
+	}
+
+	if r.MatchString(host) {
+		log.Printf("Using upstream proxy %s for %s", up_stream_proxy, host)
+		return true
+	}
+
+	return false
 }
 
 func parsFlag() {
