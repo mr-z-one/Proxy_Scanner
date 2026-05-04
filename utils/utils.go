@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func ScopeToDomain(scopeDomain []string) *regexp.Regexp {
+func ScopeToDomainRegex(scopeDomain []string) *regexp.Regexp {
 
 	s := strings.Join(scopeDomain, "|")
 	result := "(" + s + ")"

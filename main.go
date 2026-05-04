@@ -1,16 +1,16 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strconv"
 
-	flag "github.com/spf13/pflag"
-
+	"proxyScanner/db"
 	"proxyScanner/utils"
+
+	flag "github.com/spf13/pflag"
 
 	"github.com/lqqyt2423/go-mitmproxy/proxy"
 	log "github.com/sirupsen/logrus"
@@ -36,6 +36,7 @@ import (
 var up_stream_proxy string
 var port int
 var scope []string
+var outScope []string
 
 func main() {
 	parsFlag()
@@ -51,19 +52,34 @@ func main() {
 		log.Fatal(err)
 		panic(err)
 	}
+
+	db, err := db.GetDatabaseConnection("navid", "1234", "namava")
+	if err != nil {
+		fmt.Println("[-] failed to connect to database", err)
+	} else {
+		fmt.Println("[+] connect to database")
+	}
+	fmt.Println(db)
 	p.SetUpstreamProxy(func(req *http.Request) (*url.URL, error) {
 		proxyURL, err := url.Parse(up_stream_proxy)
 		if err != nil {
-			return nil, fmt.Errorf("invalid proxy URL: %w", err)
+			return nil, fmt.Errorf("[-] invalid proxy URL: %w", err)
 		}
 
 		host := req.URL.Host
 
 		var r *regexp.Regexp
+		r = utils.ScopeToDomainRegex(outScope)
+
+		if len(outScope) > 0 && r.MatchString(host) {
+			// Returning nil with this error tells mitmproxy to not use upstream proxy
+			return nil, nil
+		}
+
 		if len(scope) != 0 {
-			r = utils.ScopeToDomain(scope)
+			r = utils.ScopeToDomainRegex(scope)
 		} else {
-			r = regexp.MustCompile(".*")
+			return proxyURL, nil
 		}
 
 		if r.MatchString(host) {
@@ -72,7 +88,7 @@ func main() {
 		}
 
 		// Returning nil with this error tells mitmproxy to not use upstream proxy
-		return nil, errors.New("pass proxy")
+		return nil, nil
 	})
 
 	p.Start()
@@ -83,6 +99,7 @@ func parsFlag() {
 	flag.StringVar(&up_stream_proxy, "proxy", "http://127.0.0.1:8080", "up stream proxy")
 	flag.IntVar(&port, "port", 9080, "port of current proxy")
 	flag.StringSliceVar(&scope, "scope", []string{}, "In scope domain")
+	flag.StringSliceVar(&outScope, "out-scope", []string{}, "out scope domain")
 
 	flag.Parse()
 }
