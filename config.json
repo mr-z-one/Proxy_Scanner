@@ -7,7 +7,7 @@
     "scope":[
         "namava"
     ],
-    "outScope":[
+     "outScope":[
         "sentry.namava"
     ]
 }

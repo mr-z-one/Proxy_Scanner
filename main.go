@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"regexp"
-	"strconv"
-
 	"proxyScanner/config"
 	"proxyScanner/db"
 	"proxyScanner/utils"
+	"regexp"
+	"strconv"
 
 	flag "github.com/spf13/pflag"
 
@@ -19,21 +18,25 @@ import (
 
 //var titleRegexp = regexp.MustCompile("(<title>)(.*?)(</title>)")
 
-// type ChangeHtml struct {
-// 	proxy.BaseAddon
-// }
+type seeHttp struct {
+	proxy.BaseAddon
+}
 
-// func (c *ChangeHtml) Response(f *proxy.Flow) {
-// 	contentType := f.Response.Header.Get("Content-Type")
-// 	if !strings.Contains(contentType, "text/html") {
-// 		return
-// 	}
+func (c *seeHttp) Response(f *proxy.Flow) {
+	if !passProxy(scope, outScope, f.Request.Raw().Host) {
+		return
+	}
+	fmt.Println("--------------------------REQHEADER-----------------------------------")
+	fmt.Println("Request : ", f.Request.Header)
+	fmt.Println("--------------------------REQBody-----------------------------------")
+	fmt.Println(string(f.Request.Body))
+	fmt.Println("--------------------------RESHEADER-----------------------------------")
+	fmt.Println("Response : ", f.Response.Header)
+	fmt.Println("--------------------------RESbody-----------------------------------")
+	fmt.Println("Response : ", string(f.Response.Body))
+	fmt.Println("-------------------------------------------------------------")
+}
 
-//		// change html <title> end with: " - go-mitmproxy"
-//		f.Response.ReplaceToDecodedBody()
-//		f.Response.Body = titleRegexp.ReplaceAll(f.Response.Body, []byte("${1}go-mitmproxy${3}${2}"))
-//		f.Response.Header.Set("Content-Length", strconv.Itoa(len(f.Response.Body)))
-//	}
 var up_stream_proxy string
 var port int
 var scope []string
@@ -53,6 +56,7 @@ func main() {
 		Addr:              ":" + strconv.Itoa(port),
 		StreamLargeBodies: 1024 * 1024 * 10,
 		SslInsecure:       true,
+		Debug:             0,
 	}
 
 	p, err := proxy.NewProxy(opts)
@@ -85,7 +89,7 @@ func main() {
 		}
 
 	})
-
+	p.AddAddon(&seeHttp{})
 	p.Start()
 	//log.Fatal(p.Start())
 }
@@ -96,7 +100,9 @@ func fetchConfigFile() {
 		return
 	}
 	c := config.ReadeConfig(jsonConfig)
-
+	if c == nil {
+		return
+	}
 	if username == "" {
 		username = c.Username
 	}
