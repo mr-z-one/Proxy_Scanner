@@ -1,3 +1,5 @@
+github.com/Cgboal/DomainParser v0.0.0-20210827145802-99068439e39f h1:M2XQFmJFYRW7om3/R3u1j+h97BGbMkRowFvfXJcyHPU=
+github.com/Cgboal/DomainParser v0.0.0-20210827145802-99068439e39f/go.mod h1:a0qCkWEjo4UooxH2Z1oU1kXc1wtyMIFYEpaLx8O5JyA=
 github.com/andybalholm/brotli v1.0.4 h1:V7DdXeJtZscaqfNuAdSRuRFzuiKlHSC/Zh3zl9qY3JY=
 github.com/andybalholm/brotli v1.0.4/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

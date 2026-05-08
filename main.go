@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"proxyScanner/Model"
 	"proxyScanner/config"
+	"proxyScanner/dataType"
 	"proxyScanner/db"
 	"proxyScanner/utils"
 	"regexp"
@@ -13,6 +14,7 @@ import (
 
 	flag "github.com/spf13/pflag"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/lqqyt2423/go-mitmproxy/proxy"
 	log "github.com/sirupsen/logrus"
@@ -28,29 +30,38 @@ func (c *seeHttp) Response(f *proxy.Flow) {
 	if !passProxy(scope, outScope, f.Request.Raw().Host) {
 		return
 	}
-
+	parse_error := f.Request.Raw().ParseForm()
+	params := dataType.JSONMap{}
+	if parse_error != nil {
+		params = utils.HeaderToJSONMap(f.Request.Header)
+	}
 	data := Model.HttpRequest{
-		Signature:      "bbbb",
-		Path:           f.Request.URL.Path,
-		Method:         f.Request.Method,
+
+		Path:   f.Request.URL.Path,
+		Method: f.Request.Method,
+		Host:   f.Request.Raw().Host,
+
 		RequestHeaders: utils.HeaderToJSONMap(f.Request.Header),
 		RequestBodyRaw: string(f.Request.Body),
+
+		Parameters: params,
 
 		StatusCode:      f.Response.StatusCode,
 		ResponseHeaders: utils.HeaderToJSONMap(f.Response.Header),
 		ResponseBodyRaw: string(f.Response.Body),
 	}
-	database.Create(&data)
-
-	fmt.Println("--------------------------REQHEADER-----------------------------------")
-	fmt.Println("Request : ", f.Request.Method, f.Request.URL, " ", f.Request.Header)
-	fmt.Println("--------------------------REQBody-----------------------------------")
-	fmt.Println(string(f.Request.Body))
-	fmt.Println("--------------------------RESHEADER-----------------------------------")
-	fmt.Println("Response : ", f.Response.StatusCode, " ", f.Response.Header)
-	fmt.Println("--------------------------RESbody-----------------------------------")
-	fmt.Println("Response : ", string(f.Response.Body))
-	fmt.Println("-------------------------------------------------------------")
+	database.Clauses(clause.OnConflict{DoNothing: true}).Create(&data)
+	//
+	//fmt.Println("--------------------------REQHEADER-----------------------------------")
+	//
+	//fmt.Println("Request : ", f.Request.Method, f.Request.URL, f.Request.Raw().Form, " ", f.Request.Header)
+	//fmt.Println("--------------------------REQBody-----------------------------------")
+	//fmt.Println(string(f.Request.Body))
+	//fmt.Println("--------------------------RESHEADER-----------------------------------")
+	//fmt.Println("Response : ", f.Response.StatusCode, " ", f.Response.Header)
+	//fmt.Println("--------------------------RESbody-----------------------------------")
+	//fmt.Println("Response : ", string(f.Response.Body))
+	//fmt.Println("-------------------------------------------------------------")
 }
 
 var database *gorm.DB

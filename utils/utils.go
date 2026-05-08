@@ -2,10 +2,25 @@ package utils
 
 import (
 	"net/http"
+	"net/url"
 	"proxyScanner/dataType"
 	"regexp"
 	"strings"
 )
+
+func ValuesToJSONMap(keyValues url.Values) dataType.JSONMap {
+	result := make(dataType.JSONMap)
+
+	for key, values := range keyValues {
+		if len(values) == 1 {
+			result[key] = values[0]
+		} else {
+			result[key] = values
+		}
+	}
+
+	return result
+}
 
 func HeaderToJSONMap(headers http.Header) dataType.JSONMap {
 	result := make(dataType.JSONMap)

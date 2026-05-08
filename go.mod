@@ -3,6 +3,7 @@ module proxyScanner
 go 1.25.7
 
 require (
+	github.com/Cgboal/DomainParser v0.0.0-20210827145802-99068439e39f // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect

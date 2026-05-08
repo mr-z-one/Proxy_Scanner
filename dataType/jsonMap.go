@@ -8,6 +8,25 @@ import (
 
 type JSONMap map[string]interface{}
 
+func (j JSONMap) GetKeyValue(key string) string {
+	if key == "" {
+		return key
+	}
+	if j[key] == nil {
+		return ""
+	}
+
+	if c, ok := j[key]; ok {
+		cc, ok := c.(string)
+		if !ok {
+			return ""
+		}
+		return cc
+	}
+
+	return ""
+}
+
 func (j JSONMap) Value() (driver.Value, error) {
 	return json.Marshal(j)
 }
