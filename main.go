@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"proxyScanner/Model"
 	"proxyScanner/config"
 	"proxyScanner/db"
 	"proxyScanner/utils"
@@ -11,6 +12,7 @@ import (
 	"strconv"
 
 	flag "github.com/spf13/pflag"
+	"gorm.io/gorm"
 
 	"github.com/lqqyt2423/go-mitmproxy/proxy"
 	log "github.com/sirupsen/logrus"
@@ -26,17 +28,32 @@ func (c *seeHttp) Response(f *proxy.Flow) {
 	if !passProxy(scope, outScope, f.Request.Raw().Host) {
 		return
 	}
+
+	data := Model.HttpRequest{
+		Signature:      "bbbb",
+		Path:           f.Request.URL.Path,
+		Method:         f.Request.Method,
+		RequestHeaders: utils.HeaderToJSONMap(f.Request.Header),
+		RequestBodyRaw: string(f.Request.Body),
+
+		StatusCode:      f.Response.StatusCode,
+		ResponseHeaders: utils.HeaderToJSONMap(f.Response.Header),
+		ResponseBodyRaw: string(f.Response.Body),
+	}
+	database.Create(&data)
+
 	fmt.Println("--------------------------REQHEADER-----------------------------------")
-	fmt.Println("Request : ", f.Request.Header)
+	fmt.Println("Request : ", f.Request.Method, f.Request.URL, " ", f.Request.Header)
 	fmt.Println("--------------------------REQBody-----------------------------------")
 	fmt.Println(string(f.Request.Body))
 	fmt.Println("--------------------------RESHEADER-----------------------------------")
-	fmt.Println("Response : ", f.Response.Header)
+	fmt.Println("Response : ", f.Response.StatusCode, " ", f.Response.Header)
 	fmt.Println("--------------------------RESbody-----------------------------------")
 	fmt.Println("Response : ", string(f.Response.Body))
 	fmt.Println("-------------------------------------------------------------")
 }
 
+var database *gorm.DB
 var up_stream_proxy string
 var port int
 var scope []string
@@ -65,15 +82,16 @@ func main() {
 		panic(err)
 	}
 
-	db, err := db.GetDatabaseConnection(username, password, databaseName)
+	database, err = db.GetDatabaseConnection(username, password, databaseName)
 	if err != nil {
 		fmt.Println("[-] failed to connect to database :", err)
 		return
 	} else {
 		fmt.Println("[+] connect to database with username : ", username, "db : ", databaseName)
 	}
-	fmt.Println(db)
 
+	database.AutoMigrate(&Model.HttpRequest{})
+	fmt.Println("[+] table created..")
 	p.SetUpstreamProxy(func(req *http.Request) (*url.URL, error) {
 		proxyURL, err := url.Parse(up_stream_proxy)
 		if err != nil {
