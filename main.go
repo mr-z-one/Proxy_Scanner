@@ -11,6 +11,7 @@ import (
 	"proxyScanner/utils"
 	"regexp"
 	"strconv"
+	"strings"
 
 	flag "github.com/spf13/pflag"
 	"gorm.io/gorm"
@@ -26,8 +27,23 @@ type seeHttp struct {
 	proxy.BaseAddon
 }
 
+func (c *seeHttp) Requestheaders(f *proxy.Flow) {
+	if !passProxy(scope, outScope, f.Request.Raw().Host, f.Request.Raw().URL.Path) {
+		return
+	}
+	path := f.Request.URL.Path
+	if strings.Contains(path, ".js") {
+
+		modified := f.Request.Header.Get("If-Modified-Since")
+		if modified != "" {
+			fmt.Printf("Modified since %s\n", modified)
+			f.Request.Header.Del("If-Modified-Since")
+		}
+	}
+}
+
 func (c *seeHttp) Response(f *proxy.Flow) {
-	if !passProxy(scope, outScope, f.Request.Raw().Host) {
+	if !passProxy(scope, outScope, f.Request.Raw().Host, f.Request.Raw().URL.Path) {
 		return
 	}
 	parse_error := f.Request.Raw().ParseForm()
@@ -76,10 +92,17 @@ var databaseName string
 
 var jsonConfig string
 
+var incScopeRegex, outScopeRegex *regexp.Regexp
+
 func main() {
+
+	//rrr := regexp.MustCompile(`(sentry\.namava|/api/v1\.0/medias/\d+/play-info)`)
+	//fmt.Println(rrr.MatchString("/api/v1.0/medias/259743/play-info"))
+	//return
 	parsFlag()
 	fetchConfigFile()
 	showInputData()
+	CreateRegex()
 	opts := &proxy.Options{
 		Addr:              ":" + strconv.Itoa(port),
 		StreamLargeBodies: 1024 * 1024 * 10,
@@ -111,7 +134,7 @@ func main() {
 
 		host := req.URL.Host
 
-		if passProxy(scope, outScope, host) {
+		if passProxy(scope, outScope, host, req.URL.Path) {
 			return proxyURL, nil
 		} else {
 			return nil, nil
@@ -121,6 +144,11 @@ func main() {
 	p.AddAddon(&seeHttp{})
 	p.Start()
 	//log.Fatal(p.Start())
+}
+
+func CreateRegex() {
+	incScopeRegex = utils.ScopeToDomainRegex(scope)
+	outScopeRegex = utils.ScopeToDomainRegex(outScope)
 }
 
 func fetchConfigFile() {
@@ -157,17 +185,17 @@ func fetchConfigFile() {
 	}
 }
 
-func passProxy(inScope []string, outScope []string, host string) bool {
+func passProxy(inScope []string, outScope []string, host string, path string) bool {
 	var r *regexp.Regexp
-	r = utils.ScopeToDomainRegex(outScope)
+	r = outScopeRegex
 
-	if len(outScope) > 0 && r.MatchString(host) {
+	if len(outScope) > 0 && (r.MatchString(host) || r.MatchString(path)) {
 		// Returning nil with this error tells mitmproxy to not use upstream proxy
 		return false
 	}
 
 	if len(scope) != 0 {
-		r = utils.ScopeToDomainRegex(scope)
+		r = incScopeRegex
 	} else {
 		return true
 	}

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"proxyScanner/dataType"
@@ -41,5 +42,12 @@ func ScopeToDomainRegex(scopeDomain []string) *regexp.Regexp {
 	s := strings.Join(scopeDomain, "|")
 	result := "(" + s + ")"
 
-	return regexp.MustCompile(result)
+	r, err := regexp.Compile(result)
+
+	if err != nil {
+		fmt.Errorf("Somthing Wrong with config file ScopeToDomainRegex Error: %v", err)
+		panic(err)
+	}
+
+	return r
 }

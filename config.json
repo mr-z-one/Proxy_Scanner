@@ -8,6 +8,7 @@
         "namava"
     ],
      "outScope":[
-        "sentry.namava"
+        "sentry\\.namava",
+         "/api/v1\\.0/medias/\\d+/play-info"
     ]
 }

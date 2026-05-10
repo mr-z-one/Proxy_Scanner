@@ -1,0 +1,6 @@
+SELECT "path", count(*) AS "count"
+FROM "http_requests"
+WHERE path LIKE '%js%'
+GROUP BY "path"
+HAVING count(*) != 1
+ORDER BY "path";
