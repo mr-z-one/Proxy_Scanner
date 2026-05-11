@@ -1,14 +1,14 @@
 {
     "username":"navid",
     "password":"1234",
-    "dbName":"namava",
+    "dbName":"basalam",
     "port" : 9080,
     "proxy":"http://127.0.0.1:8080",
     "scope":[
-        "namava"
+        "basalam"
     ],
      "outScope":[
-        "sentry\\.namava",
-         "/api/v1\\.0/medias/\\d+/play-info"
+        "sentry\\.basalam",
+         "khabarchin\\.basalam.com"
     ]
 }

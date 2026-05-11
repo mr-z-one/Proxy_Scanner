@@ -63,10 +63,12 @@ func HandleBinarytData(r *HttpRequest) error {
 		"application/x-tar",
 		"application/x-7z-compressed",
 		"application/x-rar",
+		"binary/octet-stream",
 	}
 	contentTypes := r.ResponseHeaders.GetKeyValue("Content-Type")
+	lowerContentType := strings.ToLower(contentTypes)
 	for _, prefix := range binaryPrefixes {
-		if strings.HasPrefix(contentTypes, prefix) {
+		if strings.HasPrefix(contentTypes, prefix) || strings.HasPrefix(lowerContentType, prefix) {
 			return fmt.Errorf("binary data already contains %s", contentTypes)
 		}
 	}

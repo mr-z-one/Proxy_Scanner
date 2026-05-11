@@ -31,6 +31,7 @@ func (c *seeHttp) Requestheaders(f *proxy.Flow) {
 	if !passProxy(scope, outScope, f.Request.Raw().Host, f.Request.Raw().URL.Path) {
 		return
 	}
+
 	path := f.Request.URL.Path
 	if strings.Contains(path, ".js") {
 
@@ -42,10 +43,21 @@ func (c *seeHttp) Requestheaders(f *proxy.Flow) {
 	}
 }
 
+func (c *seeHttp) Request(f *proxy.Flow) {
+	if !passProxy(scope, outScope, f.Request.Raw().Host, f.Request.Raw().URL.Path) {
+
+		//f.Request.URL.Host = "sentry.namava"
+		//f.Request.URL.Path = "/redeacated.com"
+		return
+	}
+
+}
+
 func (c *seeHttp) Response(f *proxy.Flow) {
 	if !passProxy(scope, outScope, f.Request.Raw().Host, f.Request.Raw().URL.Path) {
 		return
 	}
+
 	parse_error := f.Request.Raw().ParseForm()
 	params := dataType.JSONMap{}
 	if parse_error != nil {
@@ -105,7 +117,7 @@ func main() {
 	CreateRegex()
 	opts := &proxy.Options{
 		Addr:              ":" + strconv.Itoa(port),
-		StreamLargeBodies: 1024 * 1024 * 10,
+		StreamLargeBodies: 1024 * 1,
 		SslInsecure:       true,
 		Debug:             0,
 	}
@@ -126,6 +138,25 @@ func main() {
 
 	database.AutoMigrate(&Model.HttpRequest{})
 	fmt.Println("[+] table created..")
+
+	//p.SetShouldInterceptRule(func(req *http.Request) bool {
+	//	path := req.URL.Path
+	//	host := req.URL.Host
+	//
+	//	if req.Method != "CONNECT" {
+	//		fmt.Println("no CONNECT")
+	//	}
+	//	if strings.Contains(host, "namava") {
+	//		fmt.Println("okkkkkk")
+	//	}
+	//
+	//	if strings.Contains(path, "/api/v1.0/medias/") {
+	//		fmt.Println("NAokkkkkk")
+	//	}
+	//
+	//	return passProxy(scope, outScope, host, path)
+	//})
+
 	p.SetUpstreamProxy(func(req *http.Request) (*url.URL, error) {
 		proxyURL, err := url.Parse(up_stream_proxy)
 		if err != nil {
@@ -134,14 +165,16 @@ func main() {
 
 		host := req.URL.Host
 
-		if passProxy(scope, outScope, host, req.URL.Path) {
+		if passProxy(scope, outScope, host, "") {
 			return proxyURL, nil
 		} else {
 			return nil, nil
 		}
 
 	})
+
 	p.AddAddon(&seeHttp{})
+
 	p.Start()
 	//log.Fatal(p.Start())
 }
@@ -187,6 +220,7 @@ func fetchConfigFile() {
 
 func passProxy(inScope []string, outScope []string, host string, path string) bool {
 	var r *regexp.Regexp
+
 	r = outScopeRegex
 
 	if len(outScope) > 0 && (r.MatchString(host) || r.MatchString(path)) {
