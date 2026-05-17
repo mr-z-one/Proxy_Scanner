@@ -111,13 +111,14 @@ func main() {
 	//rrr := regexp.MustCompile(`(sentry\.namava|/api/v1\.0/medias/\d+/play-info)`)
 	//fmt.Println(rrr.MatchString("/api/v1.0/medias/259743/play-info"))
 	//return
+	
 	parsFlag()
 	fetchConfigFile()
 	showInputData()
 	CreateRegex()
 	opts := &proxy.Options{
 		Addr:              ":" + strconv.Itoa(port),
-		StreamLargeBodies: 1024 * 1,
+		StreamLargeBodies: 1024 * 1024 * 10,
 		SslInsecure:       true,
 		Debug:             0,
 	}

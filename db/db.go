@@ -10,7 +10,16 @@ import (
 	"gorm.io/gorm"
 )
 
+var db *gorm.DB = nil
+
+func GetActiveDatabaseSession() *gorm.DB {
+	return db
+}
+
 func GetDatabaseConnection(username string, password string, dbName string) (*gorm.DB, error) {
+	if db != nil {
+		return db, nil
+	}
 	// Connect to default 'postgres' database as your existing user
 	dsn := fmt.Sprintf("host=localhost user=%s password=%s dbname=postgres port=5432 sslmode=disable", username, password)
 
@@ -39,5 +48,6 @@ func GetDatabaseConnection(username string, password string, dbName string) (*go
 
 	// Connect to your database with GORM
 	appDSN := fmt.Sprintf("host=localhost user=%s password=%s dbname=%s port=5432 sslmode=disable", username, password, dbName)
-	return gorm.Open(postgres.Open(appDSN), &gorm.Config{SkipDefaultTransaction: true})
+	db, err := gorm.Open(postgres.Open(appDSN), &gorm.Config{SkipDefaultTransaction: true})
+	return db, err
 }

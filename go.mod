@@ -6,6 +6,7 @@ require (
 	github.com/Cgboal/DomainParser v0.0.0-20210827145802-99068439e39f // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect

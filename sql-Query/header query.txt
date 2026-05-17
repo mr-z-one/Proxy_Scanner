@@ -1,0 +1,1 @@
+select  DISTINCT jsonb_path_query(response_body_json, '$.**.type ')  from http_requests
