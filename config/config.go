@@ -33,7 +33,7 @@ func ReadeConfig(name string) *user_config {
 		fmt.Println("[-]", err)
 		return nil
 	}
-
+	defer config.Close()
 	data, err := io.ReadAll(config)
 	if err != nil {
 		fmt.Println("[-]", err)

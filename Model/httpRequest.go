@@ -6,31 +6,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"proxyScanner/dataType"
+	"proxyScanner/db"
 	"strings"
 
 	"gorm.io/gorm"
 )
 
 type HttpRequest struct {
-	CreatedAt int64  `gorm:"autoCreateTime;index"`
-	ID        uint   `gorm:"primaryKey;autoIncrement"`
-	Signature string `gorm:"unique;type:varchar(128);not null"`
+	CreatedAt int64  `gorm:"autoCreateTime;index" json:"created_at"`
+	ID        uint   `gorm:"primaryKey;autoIncrement" json:"id"`
+	Signature string `gorm:"unique;type:varchar(128);not null"json:"signature"`
 
-	Host string `gorm:"type:varchar(150);not null"`
+	Host string `gorm:"type:varchar(150);not null"json:"host"`
 
-	Path   string `gorm:"not null;index:idx_search;size:500"`
-	Method string `gorm:"not null;index:idx_search;size:10"`
+	Path   string `gorm:"not null;index:idx_search;size:500"json:"path"`
+	Method string `gorm:"not null;index:idx_search;size:10"json:"method"`
 
-	Parameters dataType.JSONMap `gorm:"type:jsonb"`
+	Parameters dataType.JSONMap `gorm:"type:jsonb;index:,type:gin" json:"parameters"`
 
-	RequestHeaders  dataType.JSONMap `gorm:"type:jsonb;not null"`
-	RequestBodyRaw  string           `gorm:"type:text"`
-	RequestBodyJson dataType.JSONMap `gorm:"type:jsonb"`
+	RequestHeaders  dataType.JSONMap `gorm:"type:jsonb;not null;index:,type:gin" json:"requestHeaders"`
+	RequestBodyRaw  string           `gorm:"type:text"json:"requestBodyRaw"`
+	RequestBodyJson dataType.JSONMap `gorm:"type:jsonb;index:,type:gin"json:"requestBodyJson"`
 
-	StatusCode       int              `gorm:"index"`
-	ResponseHeaders  dataType.JSONMap `gorm:"type:jsonb;not null"`
-	ResponseBodyJson dataType.JSONMap `gorm:"type:jsonb"`
-	ResponseBodyRaw  string           `gorm:"type:text"`
+	StatusCode       int              `gorm:"index"json:"statusCode"`
+	ResponseHeaders  dataType.JSONMap `gorm:"type:jsonb;not null;index:,type:gin" json:"responseHeaders"`
+	ResponseBodyJson dataType.JSONMap `gorm:"type:jsonb;index:,type:gin" json:"responseBodyJson"`
+	ResponseBodyRaw  string           `gorm:"type:text"json:"responseBodyRaw"`
 }
 
 func (r *HttpRequest) BeforeCreate(tx *gorm.DB) error {
@@ -74,7 +75,6 @@ func HandleBinarytData(r *HttpRequest) error {
 	}
 	return nil
 }
-
 func HandleContentType(r *HttpRequest) {
 	contentTypes := r.ResponseHeaders.GetKeyValue("Content-Type")
 	if contentTypes != "" {
@@ -112,4 +112,11 @@ func (r *HttpRequest) hash(text string) string {
 	}
 	hash := sha256.Sum256([]byte(text))
 	return hex.EncodeToString(hash[:])
+}
+
+func GetRequestById(id uint) *HttpRequest {
+	database := db.GetActiveDatabaseSession()
+	result := HttpRequest{}
+	database.Where("id = ?", id).First(&result)
+	return &result
 }

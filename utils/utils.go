@@ -2,12 +2,31 @@ package utils
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"proxyScanner/dataType"
 	"regexp"
 	"strings"
 )
+
+func ReadeFile(path string) string {
+	f, err := os.Open(path)
+
+	if err != nil {
+		fmt.Println("[-]", err)
+		return ""
+	}
+	defer f.Close()
+
+	data, err := io.ReadAll(f)
+	if err != nil {
+		fmt.Println("[-]", err)
+		return ""
+	}
+	return string(data)
+}
 
 func ValuesToJSONMap(keyValues url.Values) dataType.JSONMap {
 	result := make(dataType.JSONMap)

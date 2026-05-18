@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"proxyScanner/Model"
+	"proxyScanner/Server"
 	"proxyScanner/config"
 	"proxyScanner/dataType"
 	"proxyScanner/db"
@@ -111,7 +112,7 @@ func main() {
 	//rrr := regexp.MustCompile(`(sentry\.namava|/api/v1\.0/medias/\d+/play-info)`)
 	//fmt.Println(rrr.MatchString("/api/v1.0/medias/259743/play-info"))
 	//return
-	
+
 	parsFlag()
 	fetchConfigFile()
 	showInputData()
@@ -139,7 +140,7 @@ func main() {
 
 	database.AutoMigrate(&Model.HttpRequest{})
 	fmt.Println("[+] table created..")
-
+	go Server.StartServer(2031)
 	//p.SetShouldInterceptRule(func(req *http.Request) bool {
 	//	path := req.URL.Path
 	//	host := req.URL.Host

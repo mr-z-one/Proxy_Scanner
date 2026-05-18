@@ -48,6 +48,6 @@ func GetDatabaseConnection(username string, password string, dbName string) (*go
 
 	// Connect to your database with GORM
 	appDSN := fmt.Sprintf("host=localhost user=%s password=%s dbname=%s port=5432 sslmode=disable", username, password, dbName)
-	db, err := gorm.Open(postgres.Open(appDSN), &gorm.Config{SkipDefaultTransaction: true})
+	db, err = gorm.Open(postgres.Open(appDSN), &gorm.Config{SkipDefaultTransaction: true})
 	return db, err
 }
