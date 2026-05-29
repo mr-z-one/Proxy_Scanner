@@ -8,6 +8,7 @@ import (
 	"proxyScanner/db"
 	"proxyScanner/utils"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -46,7 +47,7 @@ func StartServer(port int) {
 }
 func JSONContentTypeMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		isJson := r.URL.Query().Get("output") == "json"
+		isJson := strings.Contains(r.URL.Path, "api")
 		if isJson {
 			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		} else {

@@ -11,4 +11,5 @@ func RegisterRequestRoutes(router *mux.Router) {
 
 	r.HandleFunc("/{id}", handlers.GetRequestById).Methods("GET")
 
+	r.HandleFunc("/method/{method_name}", handlers.GetRequestByMethod).Methods("GET")
 }

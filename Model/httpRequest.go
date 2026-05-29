@@ -53,6 +53,7 @@ func HandleBinarytData(r *HttpRequest) error {
 		"video/",
 		"audio/",
 		"font/",
+		"application/font",
 		"application/vnd.",
 		"application/x-",
 		"application/zip",
@@ -103,9 +104,12 @@ func HandleContentType(r *HttpRequest) {
 }
 func (r *HttpRequest) generateSignature() {
 
-	input := fmt.Sprintf("%s.%s.%s.%s", r.Path, r.Host, r.Method, r.hash(r.RequestBodyRaw))
+	input := fmt.Sprintf("%s.%s.%s.%s.%s", r.Path, r.Host, r.Method,
+		r.hash(r.RequestBodyRaw), r.hash(r.ResponseHeaders.JsonMapFlat()))
+
 	r.Signature = r.hash(input)
 }
+
 func (r *HttpRequest) hash(text string) string {
 	if text == "" {
 		return ""
@@ -119,4 +123,12 @@ func GetRequestById(id uint) *HttpRequest {
 	result := HttpRequest{}
 	database.Where("id = ?", id).First(&result)
 	return &result
+}
+
+func FindRequestByMethod(method string) []*HttpRequest {
+	database := db.GetActiveDatabaseSession()
+	result := make([]*HttpRequest, 0)
+	database.Where("method = ?", method).Find(&result)
+
+	return result
 }

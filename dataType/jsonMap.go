@@ -4,9 +4,21 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 type JSONMap map[string]interface{}
+
+func (j *JSONMap) JsonMapFlat() string {
+	result := make([]string, 0)
+	for s := range *j {
+		value, _ := (*j)[s]
+		if v, ok := value.(string); ok {
+			result = append(result, v)
+		}
+	}
+	return strings.Join(result, ";")
+}
 
 func (j JSONMap) GetKeyValue(key string) string {
 	if key == "" {

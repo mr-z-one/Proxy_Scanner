@@ -41,6 +41,12 @@ func (c *seeHttp) Requestheaders(f *proxy.Flow) {
 			fmt.Printf("Modified since %s\n", modified)
 			f.Request.Header.Del("If-Modified-Since")
 		}
+
+		modified = f.Request.Header.Get("If-None-Match")
+		if modified != "" {
+			fmt.Printf("If-None-Match %s\n", modified)
+			f.Request.Header.Del("If-None-Match")
+		}
 	}
 }
 
@@ -61,12 +67,18 @@ func (c *seeHttp) Response(f *proxy.Flow) {
 
 	parse_error := f.Request.Raw().ParseForm()
 	params := dataType.JSONMap{}
-	if parse_error != nil {
-		params = utils.HeaderToJSONMap(f.Request.Header)
+	if parse_error == nil {
+
+		params = utils.ValuesToJSONMap(f.Request.Raw().Form)
+	} else {
+		params = nil
 	}
+
+	HandleNullUnicode(f)
+
 	data := Model.HttpRequest{
 
-		Path:   f.Request.URL.Path,
+		Path:   f.Request.URL.RequestURI(),
 		Method: f.Request.Method,
 		Host:   f.Request.Raw().Host,
 
@@ -91,6 +103,21 @@ func (c *seeHttp) Response(f *proxy.Flow) {
 	//fmt.Println("--------------------------RESbody-----------------------------------")
 	//fmt.Println("Response : ", string(f.Response.Body))
 	//fmt.Println("-------------------------------------------------------------")
+}
+
+func HandleNullUnicode(f *proxy.Flow) {
+	if strings.Contains(string(f.Response.Body), "\\u0000") {
+
+		rb := string(f.Response.Body)
+		n_rb := strings.Replace(rb, "\\u0000", "\\u1111", -1)
+		f.Response.Body = []byte(n_rb)
+	}
+	if strings.Contains(string(f.Request.Body), "\\u0000") {
+
+		rb := string(f.Request.Body)
+		n_rb := strings.Replace(rb, "\\u0000", "\\u1111", -1)
+		f.Request.Body = []byte(n_rb)
+	}
 }
 
 var database *gorm.DB
@@ -119,7 +146,7 @@ func main() {
 	CreateRegex()
 	opts := &proxy.Options{
 		Addr:              ":" + strconv.Itoa(port),
-		StreamLargeBodies: 1024 * 1024 * 10,
+		StreamLargeBodies: 1024 * 1024 * 5,
 		SslInsecure:       true,
 		Debug:             0,
 	}
