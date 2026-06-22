@@ -146,7 +146,7 @@ func main() {
 	CreateRegex()
 	opts := &proxy.Options{
 		Addr:              ":" + strconv.Itoa(port),
-		StreamLargeBodies: 1024 * 1024 * 5,
+		StreamLargeBodies: 1024 * 3,
 		SslInsecure:       true,
 		Debug:             0,
 	}

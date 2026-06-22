@@ -15,23 +15,23 @@ import (
 type HttpRequest struct {
 	CreatedAt int64  `gorm:"autoCreateTime;index" json:"created_at"`
 	ID        uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	Signature string `gorm:"unique;type:varchar(128);not null"json:"signature"`
+	Signature string `gorm:"unique;type:varchar(128);not null" json:"signature"`
 
-	Host string `gorm:"type:varchar(150);not null"json:"host"`
+	Host string `gorm:"type:varchar(400);not null" json:"host"`
 
-	Path   string `gorm:"not null;index:idx_search;size:500"json:"path"`
-	Method string `gorm:"not null;index:idx_search;size:10"json:"method"`
+	Path   string `gorm:"not null;index:idx_search" json:"path"`
+	Method string `gorm:"not null;index:idx_search;size:10" json:"method"`
 
 	Parameters dataType.JSONMap `gorm:"type:jsonb;index:,type:gin" json:"parameters"`
 
 	RequestHeaders  dataType.JSONMap `gorm:"type:jsonb;not null;index:,type:gin" json:"requestHeaders"`
-	RequestBodyRaw  string           `gorm:"type:text"json:"requestBodyRaw"`
+	RequestBodyRaw  string           `gorm:"type:text" json:"requestBodyRaw"`
 	RequestBodyJson dataType.JSONMap `gorm:"type:jsonb;index:,type:gin"json:"requestBodyJson"`
 
-	StatusCode       int              `gorm:"index"json:"statusCode"`
+	StatusCode       int              `gorm:"index" json:"statusCode"`
 	ResponseHeaders  dataType.JSONMap `gorm:"type:jsonb;not null;index:,type:gin" json:"responseHeaders"`
 	ResponseBodyJson dataType.JSONMap `gorm:"type:jsonb;index:,type:gin" json:"responseBodyJson"`
-	ResponseBodyRaw  string           `gorm:"type:text"json:"responseBodyRaw"`
+	ResponseBodyRaw  string           `gorm:"type:text" json:"responseBodyRaw"`
 }
 
 func (r *HttpRequest) BeforeCreate(tx *gorm.DB) error {
@@ -67,10 +67,24 @@ func HandleBinarytData(r *HttpRequest) error {
 		"application/x-rar",
 		"binary/octet-stream",
 	}
+	binary_encodeingPrefixes := []string{
+
+		"gzip",
+		"br",
+	}
 	contentTypes := r.ResponseHeaders.GetKeyValue("Content-Type")
 	lowerContentType := strings.ToLower(contentTypes)
+
+	contentEncoding := r.ResponseHeaders.GetKeyValue("Content-Encoding")
+	lowerContentEncoding := strings.ToLower(contentEncoding)
+
 	for _, prefix := range binaryPrefixes {
 		if strings.HasPrefix(contentTypes, prefix) || strings.HasPrefix(lowerContentType, prefix) {
+			return fmt.Errorf("binary data already contains %s", contentTypes)
+		}
+	}
+	for _, prefix := range binary_encodeingPrefixes {
+		if strings.HasPrefix(contentEncoding, prefix) || strings.HasPrefix(lowerContentEncoding, prefix) {
 			return fmt.Errorf("binary data already contains %s", contentTypes)
 		}
 	}

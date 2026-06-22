@@ -1,14 +1,14 @@
 {
     "username":"navid",
     "password":"1234",
-    "dbName":"daneshkar",
-    "port" : 8081,
+    "dbName":"iranserver",
+    "port" : 9080,
     "proxy":"http://127.0.0.1:8080",
     "scope":[
-        "daneshkar"
+        "iranserver"
 
     ],
      "outScope":[
-    "daneshkar\\.net/_next/image"
+
     ]
 }
